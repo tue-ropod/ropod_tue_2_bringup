@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+	<!-- Gazebo enviroment variables -->
+    <env name="GAZEBO_MODEL_PATH" value="$(find ropod_sim_model)/simulator/models:$(optenv GAZEBO_MODEL_PATH)"/>
+    <env name="GAZEBO_RESOURCE_PATH" value="$(find ropod_sim_model)/simulator:$(optenv GAZEBO_RESOURCE_PATH)"/>
+    <env name="GAZEBO_PLUGIN_PATH" value="$(env CATKIN_WORKSPACE)/devel/lib:$(optenv GAZEBO_PLUGIN_PATH)"/>
+
+	<!-- Configurable Parameters -->
+    <arg name="robot" default="ropod"/>
+	<arg name="floorplan" default="$(find ropod_maps)/onsite_generic_demo/map"/>
+    <arg name="gui" default="true" />
+	<param name="/use_sim_time" value="true" />
+	<!-- Path parameters -->
+	<arg name="robot_path" default="$(env CATKIN_WORKSPACE)/src/platform"/>
+	<arg name="robotPackage" default="ropod_tue_2_bringup"/>
+	<arg name="robot_bringup_path" default="$(arg robot_path)/$(arg robotPackage)"/>
+	
+	<!-- Launch Gazebo with an empty world -->
+	<include file="$(find gazebo_ros)/launch/empty_world.launch"> 	
+		<arg name="gui" value ="true"/>
+	</include>
+
+	<!-- Add floorplan. -->
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-file $(arg floorplan).urdf -urdf -z 1 -model floorplan -x -4.5 -y 2.0 -z 0.0 -Y 0.0" />
+
+	<!-- Launch RVIZ -->
+	<include file="$(arg robot_bringup_path)/launch/tools/rviz.launch">
+		<arg name="robot_bringup" value="$(arg robot_bringup_path)"/>
+	</include>
+</launch>

@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<launch>
+	<!-- Configurable Parameters -->
+	<!-- Robot and Load Naming -->
+	<arg name="robotName" default="ropod"/>
+	<arg name="robotCommonName" default="ropod"/>
+	<arg name="loadName" default="mobidik"/>
+	<arg name="LOAD_ATTACHED" default="false" />
+	<!-- Laser parameters -->
+	<arg name="laser" default="true"/>
+	<arg name="laser1_name" default ="laser"/>
+	<arg name="laser2_name" default ="laser_back"/>
+	<arg name="add_laser_back" default="false"/>
+	<!-- Camera parameters -->
+	<arg name="asus_cam" default="false"/>
+	<arg name="asus_cam_name" default="asusxtion"/>
+	<arg name="asus_cam_calibration" default="false"/>
+	<!-- Application parameters -->
+	<arg name="gmapping" default="false"/>
+	<arg name="floorplan" default="$(find ropod_maps)/onsite_generic_demo/map"/>
+	<arg name="ROBOT_REAL" default="$(optenv ROBOT_REAL)" />
+	<!-- Path variables -->
+	<arg name="robot_path" default="$(env CATKIN_WORKSPACE)/src/platform"/>
+	<arg name="robotPackage" default="ropod_tue_2_bringup"/>
+	<arg name="robot_bringup_path" default="$(arg robot_path)/$(arg robotPackage)"/>
+	<!-- Launch these nodes in the robot namespace -->
+	<group ns="$(arg robotName)">
+		<!-- Launch these nodes if we are working on the real robot hardware -->
+		<group if="$(arg ROBOT_REAL)">
+			<!-- #TODO check if we need to include gmapping, and which files.
+					Currently removed due to reliance on outdated files -->
+			<!-- Launch the lowlevelcontrol node -->
+			<include file="$(arg robot_bringup_path)/launch/subfiles/lowlevelcontrol.launch">
+				<arg name="robotName" value="$(arg robotName)"/>
+			</include>
+			<!-- Launch the transformation publishing nodes -->
+			<include file="$(arg robot_bringup_path)/launch/subfiles/transforms.launch">
+				<arg name="robotName" value="$(arg robotName)"/>
+				<arg name="robotPackage" value="$(arg robotPackage)"/>
+				<arg name="robot_path" value="$(arg robot_path)"/>
+		  		<arg name="robot_bringup_path" value="$(arg robot_bringup_path)"/> 
+		  		<arg name="LOAD_ATTACHED" value="$(arg LOAD_ATTACHED)"/>
+				<arg name="ROBOT_REAL" value="$(arg ROBOT_REAL)"/>
+				<arg name="laser1_name" value="$(arg laser1_name)"/>
+				<arg name="add_laser_back" value="$(arg add_laser_back)"/>
+				<arg name="laser2_name" value ="$(arg laser2_name)"/>
+			</include>
+			<!-- Launch the laser nodes -->
+			<include file="$(arg robot_bringup_path)/launch/subfiles/laser.launch">
+				<arg name="laser" value="$(arg laser)"/>
+    			<arg name="laser1_name" value="$(arg laser1_name)"/>
+				<arg name="robot_path" value="$(arg robot_path)"/>
+    			<arg name="robotPackage" value="$(arg robotPackage)"/>
+    			<arg name="robot_bringup_path" value="$(arg robot_bringup_path)"/>
+			</include>
+		</group>
+		<!-- Launch these nodes if we are working in simulation -->
+		<group unless="$(arg ROBOT_REAL)">
+			<!-- Launch the transformation publishing nodes -->
+			<include file="$(arg robot_bringup_path)/launch/subfiles/transforms.launch">
+				<arg name="robotName" value="$(arg robotName)"/>
+   		   	    <arg name="robotPackage" value="$(arg robotPackage)"/>
+				<arg name="robot_path" value="$(arg robot_path)"/>
+    			<arg name="robot_bringup_path" value="$(arg robot_bringup_path)"/> 
+    			<arg name="LOAD_ATTACHED" value="$(arg LOAD_ATTACHED)"/>
+    			<arg name="ROBOT_REAL" value="$(arg ROBOT_REAL)"/>
+    			<arg name="laser1_name" value="$(arg laser1_name)"/>
+    			<arg name="add_laser_back" value="$(arg add_laser_back)"/>
+    			<arg name="laser2_name" value ="$(arg laser2_name)"/>
+			</include>
+			<!-- Spawn the Robot -->
+			<include file="$(arg robot_bringup_path)/launch/subfiles/spawn_robot.launch">
+				<arg name="robot" value="$(arg robotName)"/>
+				<arg name="model_name" if="$(arg LOAD_ATTACHED)" value="$(arg robotCommonName)_$(arg loadName)"/>
+				<arg name="model_name" unless="$(arg LOAD_ATTACHED)" value="$(arg robotCommonName)"/>
+			</include>
+		</group>
+	</group>
+
+
+</launch>

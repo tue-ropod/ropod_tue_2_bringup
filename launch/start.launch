@@ -1,176 +1,52 @@
 <?xml version="1.0"?>
 <launch>
 	<!-- Configurable Parameters -->
-
+	<!-- Robot and Load Naming -->
 	<arg name="robotName" default="ropod"/>
-	<!--arg name="robotName" default="ropod_tue_1"/-->
 	<arg name="robotCommonName" default="ropod"/>
 	<arg name="loadName" default="mobidik"/>
 	<arg name="LOAD_ATTACHED" default="false" />
+	<!-- Laser parameters -->
 	<arg name="laser" default="true"/>
-	<arg name="laser1_name" value ="laser"/>
-	<arg name="laser2_name" value ="laser_back"/>
 	<arg name="add_laser_back" value="false"/>
-	<!--    <arg name="laser1_name" value ="hokuyo_laser_ip"/>-->
+	<!-- Camera parameters -->
 	<arg name="asus_cam" default="false"/>
-	<arg name="asus_cam_name" value="asusxtion"/>
 	<arg name="asus_cam_calibration" default="false"/>
+	<!-- Application parameters -->
 	<arg name="gmapping" default="false"/>
-	<!--<arg name="floorplan" default="$(find ropod_demo_dec_2017)/config/shape/floorplan_ropod_demo"/>-->
-	<!-- <arg name="floorplan" default="$(find ed_object_models)/models/hospital_test_amcl/walls/shape/Floorplan_demo_ROPOD_amcl"/> -->
 	<arg name="floorplan" default="$(find ropod_maps)/onsite_generic_demo/map"/>
 	<arg name="ROBOT_REAL" default="$(optenv ROBOT_REAL)" />
+	<arg name="gui" default="true"/>
+	<!-- Path variables -->
 	<arg name="robot_path" default="$(env CATKIN_WORKSPACE)/src/platform"/>
-
-	<!--	<arg name="robot_bringup_path" default="$(arg robot_path)/$(arg robotName)"/>-->
 	<arg name="robotPackage" default="ropod_tue_2_bringup"/>
 	<arg name="robot_bringup_path" default="$(arg robot_path)/$(arg robotPackage)"/>
-
-	<group ns="$(arg robotName)">
-		<!-- Start gmapping if required-->
-		<group if="$(arg gmapping)">
-			<include file="$(find robot_common)/launch/localization/gmapping.launch">
-				<arg name="robot" value="$(arg robotCommonName)" />
-				<arg name="sensor" value="$(arg laser1_name)"/>
-			</include>
-		</group>
-
-		<group if="$(arg ROBOT_REAL)">
-			<!-- Do for both: Simulator and Real Robot -->
-
-			<node name="ropod_low_level_control" pkg="ropod_low_level_control" type="ropod_low_level_control_ros" output="screen">
-
-				<remap from="/$(arg robotName)/ropod_low_level_control/odom" to="/$(arg robotName)/odom_incomplete"/>
-                <param name="platform_dxdy_cntr/Kgain" value="350.0"/>
-				<param name="platform_dxdy_cntr/I_fhz" value="0.25"/>
-				<param name="platform_dxdy_cntr/LPF_fhz" value="50.0"/>
-				<param name="platform_dxdy_cntr/LL_wz_fhz" value="20.0"/>
-				<param name="platform_dxdy_cntr/LL_wp_fhz" value="20.0"/>
-				<param name="platform_dtheta_cntr/Kgain" value="200.0"/>
-				<param name="platform_dtheta_cntr/I_fhz" value="0.3"/>
-				<param name="platform_dtheta_cntr/LPF_fhz" value="50.0"/>
-				<param name="platform_dtheta_cntr/LL_wz_fhz" value="20.0"/>
-				<param name="platform_dtheta_cntr/LL_wp_fhz" value="20.0"/>
-				<param name="platform_dvarphi_cntr/Kgain" value="0.10"/>
-				<param name="platform_dvarphi_cntr/I_fhz" value="0.0"/>
-				<param name="platform_dvarphi_cntr/LPF_fhz" value="50.0"/>
-				<param name="platform_dvarphi_cntr/LL_wz_fhz" value="2.0"/>
-				<param name="platform_dvarphi_cntr/LL_wp_fhz" value="10.0"/>
-			</node>
-
-			<!-- dynamic tf broadcaster -->
-			<group unless="$(arg LOAD_ATTACHED)">
-				<!-- <node pkg="$(arg robotName)_bringup" type="ropod_mobidik_tf_broadcaster_only_ropod" name="ropod_mobidik_tf_broadcaster_only_ropod">-->
-				<node pkg="$(arg robotPackage)" type="ropod_mobidik_tf_broadcaster_only_ropod" name="ropod_mobidik_tf_broadcaster_only_ropod">
-					<remap from="/ropod/cmd_vel" to="/$(arg robotName)/cmd_vel"/>
-					<remap from="/ropod/odom" to="/$(arg robotName)/odom"/>
-					<!--				<remap from="/ropod/odom_incomplete" to="/$(arg robotName)/odom_incomplete"/>-->
-				</node>
-			</group>
-
-			<group if="$(arg LOAD_ATTACHED)">
-				<node pkg="$(arg robotName)_bringup" type="ropod_mobidik_tf_broadcaster" name="ropod_mobidik_tf_broadcaster" />
-			</group>
-
-			<!-- Specify static transforms -->
-			<include file="$(arg robot_bringup_path)/parameters/hardware/static_tf.launch">
-				<!--				<arg name="robot" value="$(arg robotCommonName)" /> -->
-				<arg name="robot" value="$(arg robotName)" />
-				<arg name="laser1" value="$(arg laser1_name)"/>
-			</include>
-
-			<!-- Laser publishing -->
-			<group if="$(arg laser)">
-				<!-- <include file="$(find robot_common)/launch/hardware/hokuyo_laser.launch">
-					<arg name="bringup_path" value="$(arg robot_bringup_path)"/>
-					<arg name="name" value="$(arg laser1_name)"/>
-					<arg name="robot" value="$(arg robotCommonName)"/>
-				</include> -->
+	
+	<!-- Include Launch files -->
+		<!-- Launch Simulator -->
+	<include unless="$(arg ROBOT_REAL)" file="$(arg robot_bringup_path)/launch/subfiles/launchsim.launch">
+		<arg name="robot" value="$(arg robotCommonName)"/>
+		<arg name="floorplan" default="$(arg floorplan)"/>
+   		<arg name="gui" default="$(arg gui)" />
+	</include>
+		<!-- Include instance of robot -->
+	<include file="$(arg robot_bringup_path)/launch/startSingle.launch">
+		<!-- Robot and Load Naming -->
+		<arg name="robotName" value="$(arg robotName)"/>
+		<arg name="robotCommonName" value="$(arg robotCommonName)"/>
+		<arg name="LOAD_ATTACHED" value="$(arg LOAD_ATTACHED)"/>
+		<!-- Laser parameters -->
+		<arg name="laser" value="$(arg laser)"/>
+		<arg name="add_laser_back" value="$(arg add_laser_back)"/>
+		<!-- Camera parameters -->
+		<arg name="asus_cam" value="$(arg asus_cam)"/>
+		<arg name="asus_cam_calibration" value="$(arg asus_cam_calibration)"/>
+		<!-- Application parameters -->
+		<arg name="gmapping" value="$(arg gmapping)"/>
+		<arg name="ROBOT_REAL" value="$(arg ROBOT_REAL)"/>	
+	</include>
 
 
 
-
-				<group ns="$(arg laser1_name)">
-					<node pkg="urg_node" type="urg_node" name="urg_node" output="screen">
-						<rosparam command="load" file="$(arg robot_bringup_path)/parameters/hardware/hokuyo_laser_front.yaml"/>
-						<remap from="/diagnostics" to="diagnostics_back"/>
-					</node>
-
-<!--
-					<node name="urg_node" pkg="urg_node" type="urg_node" output="screen">
-					    <param name="ip_address" value="192.168.44.127"/>
-					    <param name="serial_port" value="/dev/ttyACM0"/>
-					    <param name="serial_baud" value="115200"/>
-					    <param name="frame_id" value="laser"/>
-					    <param name="calibrate_time" value="true"/>
-					    <param name="publish_intensity" value="false"/>
-					    <param name="publish_multiecho" value="false"/>
-					    <param name="angle_min" value="-1.5707963"/>
-					    <param name="angle_max" value="1.5707963"/>
-					    <remap from="scan" to="/ropod/laser/scan" />
-					  </node>
--->
-
-
-					<node name="laserBack_NoiseReduction" pkg="ropod_tue_2_bringup" type="laserBack_NoiseReduction" output="screen">
-
-					</node>
-
-				</group>
-
-			</group>
-		</group>
-	</group>
-
-	<group unless="$(arg ROBOT_REAL)">
-		<!-- SIMULATION -->
-		<param name="/use_sim_time" value="true" />
-		<group unless="$(arg LOAD_ATTACHED)">
-			<include file="$(find ropod_sim_model)/launch/simulator/gazebo_simulator.launch">
-				<arg name="robot" value="$(arg robotCommonName)" />
-				<arg name="model_name" value="$(arg robotCommonName)_$(arg loadName)" />
-				<arg name="model_path" value="$(arg robot_path)/$(arg robotCommonName)_sim_model" />
-				<arg name="movingObjects" value="false" />
-				<!--  <arg name="doubleLaser" value="false"/>-->
-			</include>
-
-			<!-- Launch tf broadcaster for ropod robot -->
-			<node pkg="$(arg robotPackage)" type="ropod_mobidik_tf_broadcaster_only_ropod" name="ropod_mobidik_tf_broadcaster_only_ropod" />
-
-		</group>
-
-
-		<group if="$(arg LOAD_ATTACHED)">
-
-			<include file="$(find ropod_sim_model)/launch/simulator/gazebo_simulator.launch">
-				<arg name="robot" value="$(arg robotCommonName)" />
-				<arg name="model_name" value="$(arg robotCommonName)_$(arg loadName)" />
-				<arg name="model_path" value="$(arg robot_path)/$(arg robotCommonName)_model" />
-				<!--  <arg name="doubleLaser" value="false"/>-->
-			</include>
-
-			<!-- Launch tf broadcaster for ropod robot -->
-			<node pkg="$(arg robotPackage)" type="ropod_mobidik_tf_broadcaster_simulator" name="ropod_mobidik_tf_broadcaster_simulator" />
-
-		</group>
-
-		<!-- Specify static transforms -->
-		<include file="$(arg robot_bringup_path)/parameters/hardware/static_tf.launch">
-			<!-- arg name="robot" value="$(arg robotCommonName)" /> -->
-			<arg name="robot" value="$(arg robotName)" />
-			<arg name="laser1" value="$(arg laser1_name)"/>
-		</include>
-		<node pkg="tf" type="static_transform_publisher" name="base2LRFBack" args="-0.285 0.0 0.27 3.14 0 0 /$(arg robotName)/base_link /$(arg robotName)/$(arg laser2_name)/scan 100" />
-
-
-		<!-- Add floorplan. -->
-		<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-file $(arg floorplan).urdf -urdf -z 1 -model floorplan -x -4.5 -y 2.0 -z 0.0 -Y 0.0" />
-
-		<!-- Launch RVIZ -->
-		<include file="$(arg robot_bringup_path)/launch/tools/rviz.launch">
-			<arg name="robot_bringup" value="$(arg robot_bringup_path)"/>
-		</include>
-
-	</group>
 
 </launch>

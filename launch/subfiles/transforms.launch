@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Robot and package names and paths -->
+    <arg name="robotName" default="ropod"/>
+    <arg name="robotPackage" default="ropod_tue_2_bringup"/>
+    <arg name="robot_path" default="$(env CATKIN_WORKSPACE)/src/platform"/>
+    <arg name="robot_bringup_path" default="$(arg robot_path)/$(arg robotPackage)"/>
+    <!-- Parameters for load and real hardware -->
+    <arg name="LOAD_ATTACHED" default="false"/>
+    <arg name="ROBOT_REAL" default="$(optenv ROBOT_REAL)"/>
+    <!-- Laser names and exsistence -->
+    <arg name="laser1_name" default="laser"/>
+    <arg name="add_laser_back" default="false"/>
+    <arg name="laser2_name" default ="laser_back"/>
+
+
+    <!-- dynamic tf broadcasters -->
+    <!-- If load attached-->
+    <group if="$(arg LOAD_ATTACHED)">   
+        <!-- On real hardware -->
+		<node if="$(arg ROBOT_REAL)"    
+            pkg="$(arg robotName)_bringup" 
+            type="ropod_mobidik_tf_broadcaster"
+            name="ropod_mobidik_tf_broadcaster" />
+         <!-- In simulation-->
+            <node unless="$(arg ROBOT_REAL)"
+            pkg="$(arg robotPackage)" 
+            type="ropod_mobidik_tf_broadcaster_simulator"
+            name="ropod_mobidik_tf_broadcaster_simulator" />
+	</group>
+    <!-- When no load attached-->
+	<group unless="$(arg LOAD_ATTACHED)">
+		<node pkg="$(arg robotPackage)" type="ropod_mobidik_tf_broadcaster_only_ropod" name="ropod_mobidik_tf_broadcaster_only_ropod">
+			<remap from="/ropod/cmd_vel" to="/$(arg robotName)/cmd_vel"/>
+			<remap from="/ropod/odom" to="/$(arg robotName)/odom"/>
+			<remap from="/ropod/odom_incomplete" to="/$(arg robotName)/odom_incomplete"/>
+		</node>
+	</group>
+	<!-- Specify static transforms -->
+	<include file="$(arg robot_bringup_path)/parameters/hardware/static_tf.launch">
+		<arg name="robot" value="$(arg robotName)" />
+		<arg name="laser1" value="$(arg laser1_name)"/>
+	</include>
+
+    <group if="$(arg add_laser_back)">
+        <node pkg="tf" type="static_transform_publisher" name="base2LRFBack" args="-0.285 0.0 0.27 3.14 0 0 /$(arg robotName)/base_link /$(arg robotName)/$(arg laser2_name)/scan 100" />
+    </group>
+</launch>

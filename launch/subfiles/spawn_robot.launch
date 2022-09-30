@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Configurable Parameters -->
+    <arg name="robot" default="ropod"/>
+    <arg name="model_name" default="ropod"/>
+    
+    <!-- Spawn a robot entitiy -->
+    <node name="ropod_spawn" pkg="gazebo_ros" type="spawn_model" output="screen" args="-sdf 
+                                                                                        -file $(find ropod_sim_model)/simulator/models/$(arg model_name)/$(arg model_name).sdf 
+                                                                                        -model $(arg robot)
+                                                                                        -x 0
+                                                                                        -y 0
+                                                                                        -z 0
+                                                                                        -R 0 -P 0 -Y 0"/>
+    <!-- Throttle laser output -->
+    <node name="throttle_laser_front" pkg="topic_tools" type="throttle" args="messages /$(arg robot)/laser_sim 20.0 /$(arg robot)/laser/scan" />
+    <node name="throttle_laser_back" pkg="topic_tools" type="throttle" args="messages /$(arg robot)/laser_back_sim 20.0 /$(arg robot)/laser/scan_back"/>
+</launch>

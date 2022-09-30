@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="robotName" default="ropod"/>
+    
+    <node name="ropod_low_level_control" pkg="ropod_low_level_control" type="ropod_low_level_control_ros" output="screen">
+        <remap from="/$(arg robotName)/ropod_low_level_control/odom" to="/$(arg robotName)/odom_incomplete"/>
+        <param name="platform_dxdy_cntr/Kgain" value="350.0"/>
+        <param name="platform_dxdy_cntr/I_fhz" value="0.25"/>
+        <param name="platform_dxdy_cntr/LPF_fhz" value="50.0"/>
+        <param name="platform_dxdy_cntr/LL_wz_fhz" value="20.0"/>
+        <param name="platform_dxdy_cntr/LL_wp_fhz" value="20.0"/>
+        <param name="platform_dtheta_cntr/Kgain" value="200.0"/>
+        <param name="platform_dtheta_cntr/I_fhz" value="0.3"/>
+        <param name="platform_dtheta_cntr/LPF_fhz" value="50.0"/>
+        <param name="platform_dtheta_cntr/LL_wz_fhz" value="20.0"/>
+        <param name="platform_dtheta_cntr/LL_wp_fhz" value="20.0"/>
+        <param name="platform_dvarphi_cntr/Kgain" value="0.10"/>
+        <param name="platform_dvarphi_cntr/I_fhz" value="0.0"/>
+        <param name="platform_dvarphi_cntr/LPF_fhz" value="50.0"/>
+        <param name="platform_dvarphi_cntr/LL_wz_fhz" value="2.0"/>
+        <param name="platform_dvarphi_cntr/LL_wp_fhz" value="10.0"/>
+    </node>
+</launch>

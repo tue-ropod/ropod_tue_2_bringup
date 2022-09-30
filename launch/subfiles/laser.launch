@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="laser" default="true"/>
+    <arg name="laser1_name" default="laser"/>
+    <arg name="robotPackage" default="ropod_tue_2_bringup"/>
+    <arg name="robot_path" default="$(env CATKIN_WORKSPACE)/src/platform"/>
+    <arg name="robot_bringup_path" default="$(arg robot_path)/$(arg robotPackage)"/>
+
+    <group if="$(arg laser)" ns="$(arg laser1_name)">
+        <node pkg="urg_node" type="urg_node" name="urg_node" output="screen">
+            <rosparam command="load" file="$(arg robot_bringup_path)/parameters/hardware/hokuyo_laser_front.yaml"/>
+            <remap from="/diagnostics" to="diagnostics_back"/>
+        </node>
+        <node name="laserBack_NoiseReduction" pkg="ropod_tue_2_bringup" type="laserBack_NoiseReduction" output="screen"/>
+    </group>
+
+</launch>

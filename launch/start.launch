@@ -8,7 +8,7 @@
 	<arg name="loadName" default="mobidik"/>
 	<arg name="LOAD_ATTACHED" default="false" />
 	<arg name="laser" default="true"/>
-	<arg name="laser1_name" value ="laser"/>
+	<arg name="laser1_name" default ="laser"/>
 	<arg name="laser2_name" value ="laser_back"/>
 	<arg name="add_laser_back" value="false"/>
 	<!--    <arg name="laser1_name" value ="hokuyo_laser_ip"/>-->
@@ -16,9 +16,12 @@
 	<arg name="asus_cam_name" value="asusxtion"/>
 	<arg name="asus_cam_calibration" default="false"/>
 	<arg name="gmapping" default="false"/>
-	<!--<arg name="floorplan" default="$(find ropod_demo_dec_2017)/config/shape/floorplan_ropod_demo"/>-->
-	<!-- <arg name="floorplan" default="$(find ed_object_models)/models/hospital_test_amcl/walls/shape/Floorplan_demo_ROPOD_amcl"/> -->
-	<arg name="floorplan" default="$(find ropod_maps)/tue_hallway_RLtoAL/map"/>
+
+	<!-- use_urdf_floorplan "true" loads URDF "floorplan", "false" loads "sdf_world" -->
+	<arg name="use_urdf_floorplan" default="false"/> 
+	<arg name="urdf_floorplan" default="$(find ropod_maps)/tue_hallway_RLtoAL/map"/>
+	<arg name="sdf_floorplan" default="$(find ropod_maps)/own_world/building_editor/model"/>
+
 	<arg name="ROBOT_REAL" default="$(optenv ROBOT_REAL)" />
 	<arg name="robot_path" default="$(env CATKIN_WORKSPACE)/src/platform"/>
 
@@ -29,10 +32,65 @@
 	<group ns="$(arg robotName)">
 		<!-- Start gmapping if required-->
 		<group if="$(arg gmapping)">
-			<include file="$(find robot_common)/launch/localization/gmapping.launch">
-				<arg name="robot" value="$(arg robotCommonName)" />
-				<arg name="sensor" value="$(arg laser1_name)"/>
-			</include>
+			<node pkg="gmapping" type="slam_gmapping" name="gmapping" output="screen">
+				<remap from="scan" to="/$(arg robotName)/$(arg laser1_name)/scan" />
+				<remap from="map" to="/$(arg robotName)/map" /> 
+				<param name="odom_frame" value="/$(arg robotName)/odom" />
+				<param name="base_frame" value="/$(arg robotName)/base_link" />
+
+				<!-- Process 1 out of every this many scans (set it to a higher number to skip more scans)  -->
+				<param name="throttle_scans" value="1"/>
+
+				<param name="map_update_interval" value="5.0"/> <!-- default: 5.0 -->
+
+				<!-- The maximum usable range of the laser. A beam is cropped to this value.  -->
+				<param name="maxUrange" value="5.0"/>
+
+				<!-- The maximum range of the sensor. If regions with no obstacles within the range of the sensor should appear as free space in the map, set maxUrange < maximum range of the real sensor <= maxRange -->
+				<param name="maxRange" value="10.0"/>
+
+				<param name="sigma" value="0.05"/>
+				<param name="kernelSize" value="1"/>
+				<param name="lstep" value="0.05"/>
+				<param name="astep" value="0.05"/>
+				<param name="iterations" value="5"/>
+				<param name="lsigma" value="0.075"/>
+				<param name="ogain" value="3.0"/>
+				<param name="minimumScore" value="0.0"/>
+				<!-- Number of beams to skip in each scan. -->
+				<param name="lskip" value="0"/>
+
+				<param name="srr" value="0.01"/>
+				<param name="srt" value="0.02"/>
+				<param name="str" value="0.01"/>
+				<param name="stt" value="0.02"/>
+
+				<!-- Process a scan each time the robot translates this far  -->
+				<param name="linearUpdate" value="0.1"/>
+
+				<!-- Process a scan each time the robot rotates this far  -->
+				<param name="angularUpdate" value="0.05"/>
+
+				<param name="temporalUpdate" value="-1.0"/>
+				<param name="resampleThreshold" value="0.5"/>
+
+				<!-- Number of particles in the filter. default 30        -->
+				<param name="particles" value="10"/>
+
+			<!-- Initial map size  -->
+				<param name="xmin" value="-10.0"/>
+				<param name="ymin" value="-10.0"/>
+				<param name="xmax" value="10.0"/>
+				<param name="ymax" value="10.0"/>
+
+				<!-- Processing parameters (resolution of the map)  -->
+				<param name="delta" value="0.02"/>
+
+				<param name="llsamplerange" value="0.01"/>
+				<param name="llsamplestep" value="0.01"/>
+				<param name="lasamplerange" value="0.005"/>
+				<param name="lasamplestep" value="0.005"/>
+			</node>
 		</group>
 
 		<group if="$(arg ROBOT_REAL)">
@@ -126,6 +184,7 @@
 				<arg name="robot" value="$(arg robotCommonName)" />
 				<arg name="model_name" value="$(arg robotCommonName)_$(arg loadName)" />
 				<arg name="model_path" value="$(arg robot_path)/$(arg robotCommonName)_model" />
+				<arg name="world_name" value="$(arg model_path)/world/$(arg robot).world"/>
 				<!--  <arg name="doubleLaser" value="false"/>-->
 			</include>
 
@@ -143,9 +202,15 @@
 		</include>
 		<node pkg="tf" type="static_transform_publisher" name="base2LRFBack" args="-0.285 0.0 0.27 3.14 0 0 /$(arg robotName)/base_link /$(arg robotName)/$(arg laser2_name)/scan 100" />
 
-
 		<!-- Add floorplan. -->
-		<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-file $(arg floorplan).urdf -urdf -z 1 -model floorplan -x 0.0 -y 0.0 -z 0.0 -Y 0.25" />
+		<group if="$(arg use_urdf_floorplan)">
+				<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-file $(arg urdf_floorplan).urdf -urdf -z 1 -model floorplan -x 0.0 -y 0.0 -z 0.0 -Y 0.25" />
+		</group>
+
+		<group unless="$(arg use_urdf_floorplan)">
+			<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" 
+                args="-file $(arg sdf_floorplan).sdf -sdf -z 1 -model floorplan -x 7.5 -y 0.0 -z 0 -Y 0.0" />
+		</group>
 
 		<!-- Launch RVIZ -->
 		<include file="$(arg robot_bringup_path)/launch/tools/rviz.launch">

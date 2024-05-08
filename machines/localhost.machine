@@ -4,7 +4,7 @@
 	<arg name="wired_connection" default="$(optenv WIRED_CONNECTION)" />
 
 	<group unless="$(arg wired_connection)">
-		<machine name="localhost" address="192.168.44.81" default="true" />
+		<machine name="localhost" address="192.168.44.101" default="true" />
         </group>
 
 	<group if="$(arg wired_connection)">

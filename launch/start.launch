@@ -21,12 +21,20 @@
 	<arg name="floorplan" default="$(find ropod_maps)/onsite_generic_demo/map"/>
 	<arg name="ROBOT_REAL" default="$(optenv ROBOT_REAL)" />
 	<arg name="robot_path" default="$(env CATKIN_WORKSPACE)/src/platform"/>
+	<arg name="twist_mux_vel_topic" default="$(arg robotName)/twist_mux/cmd_vel_out"/>
 
 	<!--	<arg name="robot_bringup_path" default="$(arg robot_path)/$(arg robotName)"/>-->
 	<arg name="robotPackage" default="ropod_tue_2_bringup"/>
 	<arg name="robot_bringup_path" default="$(arg robot_path)/$(arg robotPackage)"/>
 
 	<group ns="$(arg robotName)">
+		<!-- Start twist-mux -->
+		<!-- <node pkg="twist_mux" type="twist_mux" name="twist_mux" output="screen">
+			<remap from="cmd_vel_out" to="$(arg twist_mux_vel_topic)"/>
+			<remap from="ropod/sense/cmd_vel" to="sense/cmd_vel" />
+			<rosparam file="$(arg robot_bringup_path)/parameters/twist_mux/twist_mux_params.yaml" />
+		</node> -->
+
 		<!-- Start gmapping if required-->
 		<group if="$(arg gmapping)">
 			<include file="$(find robot_common)/launch/localization/gmapping.launch">
@@ -39,10 +47,9 @@
 			<!-- Do for both: Simulator and Real Robot -->
 
 			<node name="ropod_low_level_control" pkg="ropod_low_level_control" type="ropod_low_level_control_ros" output="screen">
-
 				<remap from="/$(arg robotName)/ropod_low_level_control/odom" to="/$(arg robotName)/odom_incomplete"/>
                 <param name="platform_dxdy_cntr/Kgain" value="350.0"/>
-				<param name="platform_dxdy_cntr/I_fhz" value="0.25"/>
+				<param name="platform_dxdy_cntr/I_fhz" value="0.4"/>
 				<param name="platform_dxdy_cntr/LPF_fhz" value="50.0"/>
 				<param name="platform_dxdy_cntr/LL_wz_fhz" value="20.0"/>
 				<param name="platform_dxdy_cntr/LL_wp_fhz" value="20.0"/>
@@ -56,6 +63,9 @@
 				<param name="platform_dvarphi_cntr/LPF_fhz" value="50.0"/>
 				<param name="platform_dvarphi_cntr/LL_wz_fhz" value="2.0"/>
 				<param name="platform_dvarphi_cntr/LL_wp_fhz" value="10.0"/>
+				<param name="base_conf/max_vel_xy" value="0.4"/>
+
+				<!-- <remap from="/ropod/cmd_vel" to="$(arg twist_mux_vel_topic)"/> -->
 			</node>
 
 			<!-- dynamic tf broadcaster -->

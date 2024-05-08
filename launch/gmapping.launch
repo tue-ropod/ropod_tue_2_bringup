@@ -2,10 +2,13 @@
 <launch>
 
     <node pkg="gmapping" type="slam_gmapping" name="gmapping" output="screen">
-         <remap from="scan" to="/ropod/laser/scan" />
-         <remap from="map" to="/ropod/map" /> 
-         <param name="odom_frame" value="/ropod/odom" />
-         <param name="base_frame" value="/ropod/base_link" />
+        <remap from="scan" to="/ropod/laser/scan" />
+        <remap from="map" to="/ropod/map" /> 
+        <param name="odom_frame" value="/ropod/odom" />
+        <param name="base_frame" value="/ropod/base_link" />
+
+        <rosparam command="load" file="$(find ropod_tue_2_bringup)/parameters/localization/gmapping.yaml" /> 
+
     </node>
   
 </launch>

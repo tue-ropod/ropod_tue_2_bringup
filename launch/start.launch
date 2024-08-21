@@ -19,7 +19,7 @@
 	<!--<arg name="floorplan" default="$(find ropod_demo_dec_2017)/config/shape/floorplan_ropod_demo"/>-->
 	<!-- <arg name="floorplan" default="$(find ed_object_models)/models/hospital_test_amcl/walls/shape/Floorplan_demo_ROPOD_amcl"/> -->
 	<arg name="floorplan" default="$(find ropod_maps)/onsite_generic_demo/map"/>
-	<arg name="ROBOT_REAL" default="$(optenv ROBOT_REAL)" />
+	<arg name="ROBOT_REAL" default="$(optenv ROBOT_REAL true)" />
 	<arg name="robot_path" default="$(env CATKIN_WORKSPACE)/src/platform"/>
 
 	<!--	<arg name="robot_bringup_path" default="$(arg robot_path)/$(arg robotName)"/>-->
